@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Meal Tracker — Recomposición</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #f0f4f8;
+            --card: #ffffff;
+            --card2: #f8fafc;
+            --border: #d1dbe8;
+            --text: #0f172a;
+            --text2: #475569;
+            --text3: #94a3b8;
+            --accent: #16a34a;
+            --accent-light: #dcfce7;
+            --blue: #1d4ed8;
+            --blue-light: #dbeafe;
+            --orange: #ea580c;
+            --orange-light: #fff7ed;
+            --purple: #7c3aed;
+            --purple-light: #ede9fe;
+            --red: #dc2626;
+            --yellow: #ca8a04;
+            --yellow-light: #fefce8;
+            --radius: 12px;
+        }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            padding-bottom: 40px;
+        }
+
+        /* Header */
+        .header {
+            background: var(--card);
+            padding: 14px 16px 12px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .app-title { font-size: 17px; font-weight: 800; color: var(--accent); }
+        .date-label { font-size: 12px; color: var(--text2); font-weight: 600; }
+
+        /* Macro bars */
+        .macro-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .macro-row {
+            background: var(--card2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 10px;
+        }
+        .macro-label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 5px;
+        }
+        .macro-name { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.4px; }
+        .macro-val { font-size: 12px; font-weight: 700; }
+        .macro-val.protein { color: var(--blue); }
+        .macro-val.carbs   { color: var(--orange); }
+        .macro-val.fat     { color: var(--purple); }
+        .macro-val.kcal    { color: var(--accent); }
+        .bar-track {
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        .bar-fill.protein { background: var(--blue); }
+        .bar-fill.carbs   { background: var(--orange); }
+        .bar-fill.fat     { background: var(--purple); }
+        .bar-fill.kcal    { background: var(--accent); }
+        .bar-fill.over    { background: var(--red); }
+
+        /* Content */
+        .content { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+
+        /* Meal card */
+        .meal-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: opacity 0.2s;
+        }
+        .meal-card.done { opacity: 0.65; }
+
+        .meal-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 14px;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            border-bottom: 1px solid var(--border);
+        }
+        .meal-check {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 13px;
+            transition: all 0.15s;
+        }
+        .meal-card.done .meal-check {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+        .meal-title-block { flex: 1; min-width: 0; }
+        .meal-name { font-size: 14px; font-weight: 700; }
+        .meal-time { font-size: 11px; color: var(--text2); margin-top: 1px; }
+        .meal-kcal-badge {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--accent);
+            background: var(--accent-light);
+            padding: 3px 8px;
+            border-radius: 20px;
+            flex-shrink: 0;
+        }
+
+        /* Food items */
+        .food-list { padding: 8px 0; }
+        .food-item {
+            padding: 8px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        .food-item:last-child { border-bottom: none; }
+        .food-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 3px;
+            line-height: 1.3;
+        }
+        .food-macros {
+            font-size: 11px;
+            color: var(--text2);
+            line-height: 1.5;
+        }
+        .food-macros span { font-weight: 700; }
+        .p-val { color: var(--blue); }
+        .c-val { color: var(--orange); }
+        .f-val { color: var(--purple); }
+
+        /* Meal macro summary */
+        .meal-total {
+            display: flex;
+            gap: 10px;
+            padding: 8px 14px;
+            background: var(--card2);
+            border-top: 1px solid var(--border);
+        }
+        .meal-total-item {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text2);
+            flex: 1;
+            text-align: center;
+        }
+        .meal-total-item span { display: block; font-size: 13px; font-weight: 800; color: var(--text); }
+
+        /* Cena toggle */
+        .cena-toggle {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+        }
+        .cena-tab {
+            flex: 1;
+            padding: 9px 8px;
+            font-size: 12px;
+            font-weight: 700;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: var(--card2);
+            color: var(--text2);
+            -webkit-tap-highlight-color: transparent;
+            transition: all 0.15s;
+        }
+        .cena-tab.active {
+            background: var(--card);
+            color: var(--accent);
+            border-bottom: 2px solid var(--accent);
+        }
+
+        /* Reset */
+        .reset-btn {
+            width: 100%;
+            padding: 13px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--red);
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .reset-btn:active { opacity: 0.7; }
+
+        /* Nav row */
+        .nav-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+        .nav-btn {
+            background: var(--card2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 5px 12px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            color: var(--text2);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .nav-btn:active { opacity: 0.7; }
+        .nav-date { font-size: 13px; font-weight: 700; color: var(--text); }
+
+        .note-box {
+            background: var(--yellow-light);
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 12px;
+            color: var(--yellow);
+            font-weight: 600;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-top">
+        <div class="app-title">🥗 Meal Tracker</div>
+        <div class="date-label" id="header-date"></div>
+    </div>
+    <div class="macro-grid">
+        <div class="macro-row">
+            <div class="macro-label-row">
+                <span class="macro-name">Proteína</span>
+                <span class="macro-val protein" id="bar-p-val">0 / 148g</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill protein" id="bar-p" style="width:0%"></div></div>
+        </div>
+        <div class="macro-row">
+            <div class="macro-label-row">
+                <span class="macro-name">Carbos</span>
+                <span class="macro-val carbs" id="bar-c-val">0 / 170g</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill carbs" id="bar-c" style="width:0%"></div></div>
+        </div>
+        <div class="macro-row">
+            <div class="macro-label-row">
+                <span class="macro-name">Grasa</span>
+                <span class="macro-val fat" id="bar-f-val">0 / 25g</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill fat" id="bar-f" style="width:0%"></div></div>
+        </div>
+        <div class="macro-row">
+            <div class="macro-label-row">
+                <span class="macro-name">Calorías</span>
+                <span class="macro-val kcal" id="bar-k-val">0 / 1500</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill kcal" id="bar-k" style="width:0%"></div></div>
+        </div>
+    </div>
+</div>
+
+<div class="content" id="content"></div>
+
+<script>
+const TARGETS = { p: 148, c: 170, f: 25, k: 1500 };
+
+// All meals. cena is special — two variants, A and B.
+const MEALS = [
+    {
+        id: "pre",
+        name: "Pre-entreno",
+        time: "6:00",
+        foods: [
+            { name: "1 plátano 120g (Obst-Abteilung Lidl)", p:1, c:23, f:0, k:90 }
+        ]
+    },
+    {
+        id: "post",
+        name: "Post-entreno — Batido",
+        time: "7:00 · días de gimnasio",
+        foods: [
+            { name: "30g Applied Nutrition Beef XP Clear — Lemon & Mint (disolver en 400ml agua fría)", p:28, c:1, f:1, k:114 }
+        ]
+    },
+    {
+        id: "des",
+        name: "Desayuno",
+        time: "8:15",
+        foods: [
+            { name: "60g Copos de avena Harvest Basket (Lidl)", p:8, c:39, f:4, k:220 },
+            { name: "200g Yogur Milbona Greek Style 0% (Lidl)", p:20, c:8, f:0, k:110 },
+            { name: "100g Frutos del bosque Freshona Mixed Berries (Lidl)", p:1, c:12, f:0, k:50 }
+        ]
+    },
+    {
+        id: "alm",
+        name: "Almuerzo",
+        time: "12:00",
+        foods: [
+            { name: "180g Pechuga pollo Filets de Poulet (Lidl)", p:55, c:0, f:6, k:270 },
+            { name: "150g Arroz integral Harvest Basket cocido (Lidl)", p:3, c:32, f:1, k:150 },
+            { name: "150g Brócoli congelado Freshona (Lidl)", p:4, c:6, f:0, k:40 },
+            { name: "½ cdta aceite oliva Bertolli (Leclerc)", p:0, c:0, f:2, k:20 }
+        ]
+    },
+    {
+        id: "snk",
+        name: "Snack",
+        time: "15:30",
+        foods: [
+            { name: "1 manzana 150g (Obst-Abteilung Lidl)", p:0, c:18, f:0, k:70 }
+        ]
+    },
+    {
+        id: "cena",
+        name: "Cena",
+        time: "19:30",
+        isCena: true,
+        variantA: {
+            label: "Opción A — Merluza",
+            foods: [
+                { name: "200g Merluza fresca/congelada Colin (Leclerc)", p:38, c:0, f:2, k:160 },
+                { name: "200g Espinacas Jeunes Pousses d'Épinard (Leclerc)", p:5, c:6, f:1, k:50 },
+                { name: "200g Patata a granel Pommes de Terre (Leclerc)", p:4, c:34, f:0, k:150 },
+                { name: "½ cdta aceite oliva Bertolli (Leclerc)", p:0, c:0, f:2, k:20 }
+            ]
+        },
+        variantB: {
+            label: "Opción B — Atún + Quinoa",
+            foods: [
+                { name: "2 latas Atún Nixe 130g escurrido (Lidl)", p:52, c:0, f:2, k:220 },
+                { name: "150g Quinoa bio cocida (Leclerc, sección ecológica)", p:6, c:27, f:2, k:150 },
+                { name: "150g Ensalada tomate/pepino/cebolla (Leclerc)", p:2, c:8, f:0, k:40 }
+            ]
+        }
+    }
+];
+
+function todayStr() {
+    return new Date().toISOString().slice(0,10);
+}
+
+function dateLabel(d) {
+    const months = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+    const days   = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+    const dt = new Date(d + "T12:00:00");
+    return `${days[dt.getDay()]} ${dt.getDate()} ${months[dt.getMonth()]}`;
+}
+
+function offsetDate(base, delta) {
+    const dt = new Date(base + "T12:00:00");
+    dt.setDate(dt.getDate() + delta);
+    return dt.toISOString().slice(0,10);
+}
+
+let viewDate = todayStr();
+
+function storageKey(d) { return "meal_tracker_" + d; }
+
+function loadDay(d) {
+    try {
+        const raw = localStorage.getItem(storageKey(d));
+        return raw ? JSON.parse(raw) : { done: {}, cena: "A" };
+    } catch(e) { return { done: {}, cena: "A" }; }
+}
+
+function saveDay(d, state) {
+    try { localStorage.setItem(storageKey(d), JSON.stringify(state)); } catch(e) {}
+}
+
+let state = loadDay(viewDate);
+
+function mealTotals(foods) {
+    return foods.reduce((acc, f) => ({
+        p: acc.p + f.p, c: acc.c + f.c, f: acc.f + f.f, k: acc.k + f.k
+    }), {p:0, c:0, f:0, k:0});
+}
+
+function getFoods(meal) {
+    if (!meal.isCena) return meal.foods;
+    return state.cena === "B" ? meal.variantB.foods : meal.variantA.foods;
+}
+
+function calcTotals() {
+    let totals = {p:0, c:0, f:0, k:0};
+    MEALS.forEach(meal => {
+        if (state.done[meal.id]) {
+            const foods = getFoods(meal);
+            const t = mealTotals(foods);
+            totals.p += t.p; totals.c += t.c; totals.f += t.f; totals.k += t.k;
+        }
+    });
+    return totals;
+}
+
+function updateBars() {
+    const t = calcTotals();
+    const isToday = viewDate === todayStr();
+
+    document.getElementById("header-date").textContent = isToday ? "Hoy · " + dateLabel(viewDate) : dateLabel(viewDate);
+
+    const items = [
+        { id:"p", val:t.p, target:TARGETS.p, unit:"g" },
+        { id:"c", val:t.c, target:TARGETS.c, unit:"g" },
+        { id:"f", val:t.f, target:TARGETS.f, unit:"g" },
+        { id:"k", val:t.k, target:TARGETS.k, unit:"kcal" }
+    ];
+    items.forEach(({id, val, target, unit}) => {
+        const pct = Math.min(100, Math.round(val / target * 100));
+        const over = val > target;
+        document.getElementById("bar-" + id + "-val").textContent =
+            (unit === "kcal" ? val + " / " + target : val + " / " + target + "g");
+        const fill = document.getElementById("bar-" + id);
+        fill.style.width = pct + "%";
+        fill.className = "bar-fill " + (over ? "over" : id === "k" ? "kcal" : id);
+    });
+}
+
+function toggleMeal(mealId) {
+    state.done[mealId] = !state.done[mealId];
+    saveDay(viewDate, state);
+    render();
+}
+
+function setCena(variant) {
+    state.cena = variant;
+    saveDay(viewDate, state);
+    render();
+}
+
+function goDate(delta) {
+    viewDate = offsetDate(viewDate, delta);
+    state = loadDay(viewDate);
+    render();
+}
+
+function resetDay() {
+    state = { done: {}, cena: state.cena };
+    saveDay(viewDate, state);
+    render();
+}
+
+function render() {
+    updateBars();
+    let html = "";
+
+    // Nav row
+    const isToday = viewDate === todayStr();
+    html += `<div class="nav-row">
+        <button class="nav-btn" onclick="goDate(-1)">◀ Anterior</button>
+        <span class="nav-date">${isToday ? "HOY" : dateLabel(viewDate)}</span>
+        <button class="nav-btn" onclick="goDate(1)"${isToday ? " disabled style='opacity:.4'" : ""}>Siguiente ▶</button>
+    </div>`;
+
+    if (!isToday) {
+        html += `<div class="note-box">📅 Viendo historial de ${dateLabel(viewDate)}</div>`;
+    }
+
+    MEALS.forEach(meal => {
+        const foods = getFoods(meal);
+        const totals = mealTotals(foods);
+        const done = !!state.done[meal.id];
+
+        html += `<div class="meal-card ${done ? "done" : ""}">`;
+
+        // Cena toggle tabs
+        if (meal.isCena) {
+            html += `<div class="cena-toggle">
+                <button class="cena-tab ${state.cena === "A" ? "active" : ""}" onclick="setCena('A')">Opción A — Merluza</button>
+                <button class="cena-tab ${state.cena === "B" ? "active" : ""}" onclick="setCena('B')">Opción B — Atún+Quinoa</button>
+            </div>`;
+        }
+
+        // Meal header (tap to toggle done)
+        html += `<div class="meal-header" onclick="toggleMeal('${meal.id}')">
+            <div class="meal-check">${done ? "✓" : ""}</div>
+            <div class="meal-title-block">
+                <div class="meal-name">${meal.name}</div>
+                <div class="meal-time">${meal.time}${meal.isCena ? " · " + (state.cena === "B" ? meal.variantB.label : meal.variantA.label) : ""}</div>
+            </div>
+            <div class="meal-kcal-badge">${totals.k} kcal</div>
+        </div>`;
+
+        // Food items
+        html += `<div class="food-list">`;
+        foods.forEach(food => {
+            html += `<div class="food-item">
+                <div class="food-name">${food.name}</div>
+                <div class="food-macros">
+                    contiene <span class="p-val">${food.p}g proteína</span> /
+                    <span class="c-val">${food.c}g carbos</span> /
+                    <span class="f-val">${food.f}g grasa</span> · ${food.k} kcal
+                </div>
+            </div>`;
+        });
+        html += `</div>`;
+
+        // Meal total footer
+        html += `<div class="meal-total">
+            <div class="meal-total-item"><span class="p-val">${totals.p}g</span>Proteína</div>
+            <div class="meal-total-item"><span class="c-val">${totals.c}g</span>Carbos</div>
+            <div class="meal-total-item"><span class="f-val">${totals.f}g</span>Grasa</div>
+            <div class="meal-total-item"><span>${totals.k}</span>kcal</div>
+        </div>`;
+
+        html += `</div>`; // meal-card
+    });
+
+    html += `<button class="reset-btn" onclick="resetDay()">🗑 Borrar marcas de hoy</button>`;
+
+    document.getElementById("content").innerHTML = html;
+}
+
+render();
+</script>
+</body>
+</html>
