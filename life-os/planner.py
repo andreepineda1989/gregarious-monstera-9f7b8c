@@ -1,6 +1,6 @@
 """
 planner.py — Generates a time-blocked weekly plan.
-Reads the week's Google Calendar events and asks Claude to produce
+Reads the week's Google Calendar events and asks Gemini to produce
 a structured plan that fits in all weekly targets.
 """
 
@@ -10,13 +10,13 @@ import sys
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
-import anthropic
+import google.generativeai as genai
 
 from gcal import get_service, get_events, format_event
 from tracker import compute_stats, load_habits
 
 BASE_DIR = Path(__file__).parent
-MODEL = "claude-sonnet-4-20250514"
+MODEL = "gemini-1.5-flash"
 
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
@@ -92,7 +92,7 @@ def run_planner() -> None:
     except Exception as exc:
         print(f"⚠  Calendar: {exc}", file=sys.stderr)
 
-    # ── Context for Claude ────────────────────────────────────────────────────
+    # ── Context for Gemini ────────────────────────────────────────────────────
     remaining_ai = max(0, targets["ai_project_hours"] - (w["ai_project_hours"] if offset == 0 else 0))
     remaining_french = max(0, targets["french_spoken_sessions"] - (w["french_spoken_sessions"] if offset == 0 else 0))
     remaining_gym = max(0, targets["gym_sessions"] - (w["gym_sessions"] if offset == 0 else 0))
@@ -106,18 +106,15 @@ ALREADY COMPLETED THIS WEEK:
   Gym: {w['gym_sessions']} sessions ({remaining_gym} more needed)
 """
 
-    # ── Claude API ────────────────────────────────────────────────────────────
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    # ── Gemini API ────────────────────────────────────────────────────────────
+    api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
-        print("✗  ANTHROPIC_API_KEY not set.", file=sys.stderr)
+        print("✗  GEMINI_API_KEY not set.", file=sys.stderr)
         sys.exit(1)
 
-    client = anthropic.Anthropic(api_key=api_key)
+    genai.configure(api_key=api_key)
 
-    system = [
-        {
-            "type": "text",
-            "text": f"""You are the Life OS weekly planner for Andreé.
+    system_prompt = f"""You are the Life OS weekly planner for Andreé.
 
 PROFILE:
 {json.dumps(profile, indent=2)}
@@ -137,10 +134,7 @@ Output format:
 - End with a "WEEKLY PRIORITIES" section (top 3 numbered items)
 - Plain text, no markdown headers or decorations
 
-Week: {monday.strftime('%d %B')} – {sunday.strftime('%d %B %Y')}""",
-            "cache_control": {"type": "ephemeral"},
-        }
-    ]
+Week: {monday.strftime('%d %B')} – {sunday.strftime('%d %B %Y')}"""
 
     user_msg = f"""EXISTING CALENDAR COMMITMENTS:
 {events_text}
@@ -151,16 +145,17 @@ Ensure {remaining_ai:.1f}h AI project, {remaining_french} French spoken sessions
     print("\n🤖  Generating weekly plan...\n")
     print("-" * 44)
 
+    model = genai.GenerativeModel(
+        model_name=MODEL,
+        system_instruction=system_prompt,
+    )
+
     full_text = ""
-    with client.messages.stream(
-        model=MODEL,
-        max_tokens=2500,
-        system=system,
-        messages=[{"role": "user", "content": user_msg}],
-    ) as stream:
-        for chunk in stream.text_stream:
-            print(chunk, end="", flush=True)
-            full_text += chunk
+    response = model.generate_content(user_msg, stream=True)
+    for chunk in response:
+        if chunk.text:
+            print(chunk.text, end="", flush=True)
+            full_text += chunk.text
 
     print("\n" + "-" * 44)
 

@@ -17,9 +17,11 @@ BASE_DIR = Path(__file__).parent
 
 def check_env():
     import os
-    if not os.environ.get("ANTHROPIC_API_KEY"):
-        print("✗  ANTHROPIC_API_KEY is not set.")
-        print("   Export it before running: export ANTHROPIC_API_KEY=sk-ant-...")
+    if not os.environ.get("GEMINI_API_KEY"):
+        print("✗  GEMINI_API_KEY is not set.")
+        print("   Set it before running:")
+        print("   Windows:  set GEMINI_API_KEY=your-key-here")
+        print("   Mac/Linux: export GEMINI_API_KEY=your-key-here")
         sys.exit(1)
 
     token = BASE_DIR / "token.pickle"

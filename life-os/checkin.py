@@ -1,6 +1,6 @@
 """
 checkin.py — Evening check-in.
-Logs what got done, updates habits.json, asks Claude for a reflection
+Logs what got done, updates habits.json, asks Gemini for a reflection
 and rescheduling suggestions for anything missed.
 """
 
@@ -10,7 +10,7 @@ import sys
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
-import anthropic
+import google.generativeai as genai
 
 from gcal import get_service, get_events, format_events_block, create_event
 from tracker import (
@@ -23,7 +23,7 @@ from tracker import (
 )
 
 BASE_DIR = Path(__file__).parent
-MODEL = "claude-sonnet-4-20250514"
+MODEL = "gemini-1.5-flash"
 
 
 def _ask_yn(prompt: str) -> bool:
@@ -136,33 +136,27 @@ def run_checkin() -> None:
     save_habits(habits)
     print("\n  ✓ Habits saved.\n")
 
-    # ── Stats for Claude ──────────────────────────────────────────────────────
+    # ── Stats for Gemini ──────────────────────────────────────────────────────
     updated_log = habits["daily_log"]
     stats = compute_stats(updated_log)
     s = stats["streaks"]
     w = stats["weekly"]
     targets = profile["weekly_targets"]
 
-    # ── Claude reflection ─────────────────────────────────────────────────────
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    # ── Gemini reflection ─────────────────────────────────────────────────────
+    api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
-        print("✗  ANTHROPIC_API_KEY not set.", file=sys.stderr)
+        print("✗  GEMINI_API_KEY not set.", file=sys.stderr)
         return
 
-    client = anthropic.Anthropic(api_key=api_key)
+    genai.configure(api_key=api_key)
 
-    system = [
-        {
-            "type": "text",
-            "text": f"""You are Life OS, a personal accountability coach for Andreé.
+    system_prompt = f"""You are Life OS, a personal accountability coach for Andreé.
 
 PROFILE:
 {json.dumps(profile, indent=2)}
 
-Today is {now.strftime('%A, %d %B %Y')}. Be honest, warm, and concise.""",
-            "cache_control": {"type": "ephemeral"},
-        }
-    ]
+Today is {now.strftime('%A, %d %B %Y')}. Be honest, warm, and concise."""
 
     ai_gap = max(0, targets["ai_project_hours"] - w["ai_project_hours"])
     french_gap = max(0, targets["french_spoken_sessions"] - w["french_spoken_sessions"])
@@ -193,15 +187,16 @@ Give me:
 
 Under 150 words total."""
 
+    model = genai.GenerativeModel(
+        model_name=MODEL,
+        system_instruction=system_prompt,
+    )
+
     print("🤖  Reflection:\n")
-    with client.messages.stream(
-        model=MODEL,
-        max_tokens=400,
-        system=system,
-        messages=[{"role": "user", "content": user_msg}],
-    ) as stream:
-        for chunk in stream.text_stream:
-            print(chunk, end="", flush=True)
+    response = model.generate_content(user_msg, stream=True)
+    for chunk in response:
+        if chunk.text:
+            print(chunk.text, end="", flush=True)
 
     print("\n\n" + "=" * 44)
 
@@ -215,11 +210,9 @@ Under 150 words total."""
 def _schedule_catchup(service, missed: list[str], today: date) -> None:
     """Suggest and optionally create a catch-up block for tomorrow."""
     tomorrow = today + timedelta(days=1)
-    tomorrow_name = tomorrow.strftime("%A")
 
     print(f"\n  Scheduling catch-up for {tomorrow.strftime('%A %d/%m')}:")
 
-    # Simple time slot: 07:00 – 07:30 for short items, 21:00–22:00 for longer
     short_items = [m for m in missed if "French" in m]
     long_items = [m for m in missed if "AI project" in m or "Gym" in m]
 
