@@ -1,0 +1,161 @@
+{
+  "name": "Andreé",
+  "age": 36,
+  "nationality": "Peruvian",
+  "location": "Luxembourg",
+  "timezone": "Europe/Luxembourg",
+
+  "work": {
+    "title": "Transfer Pricing Associate",
+    "company": "Revantage Europe",
+    "schedule": "Monday–Friday",
+    "goal": "Earn promotion to Senior Associate"
+  },
+
+  "family": {
+    "daughter": {
+      "name": "Andrea",
+      "age": 8,
+      "school": "European School 2, Mamer",
+      "homework_support_days": ["Monday", "Tuesday", "Wednesday", "Sunday"]
+    },
+    "spouse": {
+      "work": "Mexican food truck owner"
+    }
+  },
+
+  "goals": {
+    "career": {
+      "description": "Promotion at Revantage Europe",
+      "priority": "high"
+    },
+    "debt_elimination": {
+      "strategy": "avalanche",
+      "description": "Eliminate high-interest debt as fast as possible",
+      "debts": [
+        {
+          "name": "Zable",
+          "apr": 39.9,
+          "priority": 1,
+          "status": "active_attack"
+        },
+        {
+          "name": "Capital One",
+          "priority": 2,
+          "status": "minimum_payments"
+        },
+        {
+          "name": "Lendable",
+          "priority": 3,
+          "status": "autopilot",
+          "autopilot_until": "2028-08-01"
+        }
+      ]
+    },
+    "french": {
+      "current_level": "A1",
+      "target_level": "B1",
+      "target_date": "2027-07-01",
+      "tools": ["Babbel", "Busuu", "French Cafe podcast", "Claude spoken practice"],
+      "daily_study_minutes": 30,
+      "spoken_practice_days": ["Monday", "Tuesday", "Thursday", "Saturday", "Sunday"],
+      "spoken_session_minutes": 20
+    },
+    "residency": {
+      "description": "Luxembourg permanent residency",
+      "language_requirement": "French B1"
+    },
+    "ai_education_business": {
+      "description": "AI-powered education tools + YouTube channel",
+      "components": ["AI homework companion app", "YouTube channel about AI in education"],
+      "weekly_hours_target": 7
+    },
+    "fitness": {
+      "gym_days_per_week": 4,
+      "gym_days": ["Monday", "Friday", "Saturday", "Sunday"],
+      "daily_steps_target": 10000
+    }
+  },
+
+  "weekly_schedule": {
+    "Monday": {
+      "gym": {"time": "06:30", "duration_min": 90},
+      "work": {"start": "09:00", "end": "18:30"},
+      "andrea_homework": {"time": "19:00", "subject": "English"},
+      "bedtime_routine": {"time": "20:00"},
+      "couple_time": {"time": "20:30"},
+      "ai_project": {"time": "21:30", "duration_min": 60},
+      "french_spoken": {"time": "22:30", "duration_min": 20}
+    },
+    "Tuesday": {
+      "andrea_bus": "06:30",
+      "work": {"start": "09:00", "end": "17:30"},
+      "groceries": {"time": "18:00"},
+      "andrea_homework": {"time": "19:30", "subject": "Math"},
+      "family_dinner": {"time": "20:00"},
+      "bedtime_routine": {"time": "21:00"},
+      "ai_project": {"time": "21:30", "duration_min": 30},
+      "french_spoken": {"time": "22:00", "duration_min": 20}
+    },
+    "Wednesday": {
+      "andrea_bus": "06:30",
+      "work": {"start": "09:00", "end": "18:30"},
+      "andrea_homework": {"time": "19:00", "subject": "Reading"},
+      "bedtime_routine": {"time": "20:00"},
+      "couple_time": {"time": "20:30"},
+      "ai_project": {"time": "21:30", "duration_min": 60}
+    },
+    "Thursday": {
+      "andrea_bus": "06:30",
+      "work": {"start": "09:00", "end": "17:30"},
+      "family_dinner": {"time": "19:00"},
+      "bedtime_routine": {"time": "21:00"},
+      "ai_project": {"time": "21:30", "duration_min": 60},
+      "french_spoken": {"time": "22:30", "duration_min": 20}
+    },
+    "Friday": {
+      "gym": {"time": "06:30", "duration_min": 90},
+      "work": {"start": "09:00", "end": "18:30"},
+      "play_with_andrea": {"time": "19:00"},
+      "bedtime_routine": {"time": "20:00"},
+      "ai_project": {"time": "20:30", "duration_min": 60},
+      "movie_night": {"time": "21:30"}
+    },
+    "Saturday": {
+      "ai_project_deep_work": {"time": "08:00", "duration_min": 120},
+      "gym": {"time": "10:00", "duration_min": 120},
+      "french_spoken": {"time": "12:00", "duration_min": 20},
+      "family_time": {"start": "13:00", "end": "19:00"},
+      "finance_review": {"time": "19:00", "duration_min": 45},
+      "couple_time": {"time": "20:00"}
+    },
+    "Sunday": {
+      "ai_project_deep_work": {"time": "08:00", "duration_min": 120},
+      "gym": {"time": "10:00", "duration_min": 60},
+      "french_spoken_am": {"time": "11:00", "duration_min": 20},
+      "family_time": {"start": "12:00", "end": "19:30"},
+      "andrea_homework": {"time": "16:00", "subject": "French"},
+      "french_spoken_pm": {"time": "19:30", "duration_min": 20},
+      "weekly_planning": {"time": "20:00", "duration_min": 30}
+    }
+  },
+
+  "weekly_targets": {
+    "ai_project_hours": 7,
+    "french_spoken_sessions": 5,
+    "french_spoken_minutes_per_session": 20,
+    "gym_sessions": 4,
+    "steps_daily": 10000,
+    "finance_review_day": "Saturday",
+    "finance_review_time": "19:00",
+    "weekly_planning_day": "Sunday",
+    "weekly_planning_time": "20:00"
+  },
+
+  "motivational_context": {
+    "why_french": "Required for Luxembourg permanent residency (B1 minimum) and daily life integration",
+    "why_ai_business": "Financial freedom and career diversification — build while employed",
+    "why_fitness": "Energy for family, work and business. Lead by example for Andrea.",
+    "north_star": "Debt-free, promoted, B1 French, permanent resident, AI business generating income — by 2028"
+  }
+}
